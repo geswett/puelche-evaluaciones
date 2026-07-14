@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puelche HC — Evaluaciones Psicolaborales</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F6F3;
+  --surface:#FFFFFF;
+  --surface2:#F0EEE9;
+  --border:#D8D5CE;
+  --border2:#C8C5BD;
+  --text:#1A1917;
+  --text2:#5C5A55;
+  --text3:#9A9891;
+  --accent:#1A6B4A;
+  --accent-bg:#E5F4EE;
+  --blue:#1A4D8F;
+  --blue-bg:#E5EEFA;
+  --amber:#7A4F0A;
+  --amber-bg:#FDF0D8;
+  --purple:#4A3A8F;
+  --purple-bg:#EEEAF8;
+  --teal:#0F6E6E;
+  --teal-bg:#DEF3F1;
+  --red:#8F1A1A;
+  --red-bg:#FAE5E5;
+  --shadow:0 2px 12px rgba(0,0,0,0.08);
+  --radius:8px;
+  --radius-lg:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:12px;height:52px;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+.logo{font-size:15px;font-weight:600;color:var(--text);flex:1;white-space:nowrap}
+.logo span{color:var(--accent)}
+.tabs{display:flex;gap:2px}
+.tab{padding:6px 14px;border:none;border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:500;background:transparent;color:var(--text2);transition:all .15s}
+.tab:hover{background:var(--surface2)}
+.tab.active{background:var(--text);color:#fff}
+.btn{padding:6px 14px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:500;background:var(--surface);color:var(--text);transition:all .15s;display:flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--border2);background:var(--surface2)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#155c3f}
+
+/* FILTERS */
+.filters{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:sticky;top:52px;z-index:95}
+.filters select,.filters input[type=text]{font-size:13px;padding:5px 9px;height:32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none}
+.filters select:focus,.filters input:focus{border-color:var(--accent)}
+.cnt{font-size:12px;color:var(--text3);margin-left:auto}
+
+/* CONTENT */
+.content{padding:14px 16px}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 160px);border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);width:100%}
+.table-wrap thead th{position:sticky;top:0;z-index:10;box-shadow:0 1px 0 var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-weight:600;font-size:11px;color:var(--text2);white-space:nowrap}
+th.sort{cursor:pointer}
+th.sort:hover{color:var(--text)}
+td{padding:0;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFAF8}
+.cell{padding:7px 8px;min-height:34px;display:flex;align-items:center;gap:4px}
+.editable{cursor:pointer}
+.editable:hover .cell{background:#F5F4F0;border-radius:4px}
+.editable:hover .cell::after{content:'✎';font-size:10px;color:var(--text3);margin-left:auto;flex-shrink:0}
+.cell-input{width:100%;padding:5px 7px;border:2px solid var(--accent);border-radius:5px;background:#fff;color:var(--text);font-size:13px;font-family:inherit;outline:none}
+.cell-select{width:100%;padding:4px 6px;border:2px solid var(--accent);border-radius:5px;background:#fff;color:var(--text);font-size:12px;font-family:inherit;outline:none}
+.cell-date{width:100%;padding:4px 6px;border:2px solid var(--accent);border-radius:5px;background:#fff;color:var(--text);font-size:12px;outline:none}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.b-cerrado{background:var(--blue-bg);color:var(--blue)}
+.b-activo{background:var(--accent-bg);color:var(--accent)}
+.b-externa{background:var(--purple-bg);color:var(--purple)}
+.b-interna{background:var(--teal-bg);color:var(--teal)}
+.b-vacio{background:var(--surface2);color:var(--text3)}
+.hint{font-size:12px;color:var(--text3)}
+.del-btn{opacity:0;transition:opacity .15s;background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:3px 6px;border-radius:4px}
+.del-btn:hover{color:var(--red);background:var(--red-bg)}
+tr:hover .del-btn{opacity:1}
+
+/* OVERLAY */
+.overlay{display:none;position:fixed;inset:0;background:rgba(20,18,15,0.55);z-index:300;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto;backdrop-filter:blur(2px)}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:22px;width:96%;max-width:460px;margin-bottom:40px;box-shadow:var(--shadow)}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:16px;font-weight:600}
+.mc{background:none;border:none;cursor:pointer;color:var(--text2);font-size:22px;line-height:1;padding:0 4px;border-radius:4px}
+.mc:hover{color:var(--text);background:var(--surface2)}
+.nf{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.nf label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+.nf select,.nf input{font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none;transition:border .15s}
+.nf select:focus,.nf input:focus{border-color:var(--accent)}
+.fa{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.form-sep{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 10px;padding-top:14px;border-top:1px solid var(--border)}
+
+/* SETTINGS modal */
+.tag-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tag-item{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;font-weight:600}
+.tag-del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;line-height:1;padding:0 2px;border-radius:3px}
+.tag-del:hover{color:var(--red)}
+.tag-add{display:flex;gap:6px}
+.tag-add input{flex:1;padding:6px 9px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none}
+.tag-add input:focus{border-color:var(--accent)}
+.tag-add button{padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:600}
+
+/* RESUMEN (matriz psicóloga x mes) */
+.ct-wrap{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface)}
+.ct{width:100%;border-collapse:collapse;font-size:13px}
+.ct th{padding:9px 12px;background:var(--surface2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-weight:700;font-size:11px;text-align:center;color:var(--text2)}
+.ct th.left{text-align:left}
+.ct td{padding:8px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:center;font-size:13px}
+.ct td:last-child,.ct th:last-child{border-right:none}
+.ct td.name{font-weight:600;text-align:left;background:var(--surface)}
+.ct td.total{font-weight:700;background:var(--surface2)}
+.ct tr:last-child td{border-bottom:none}
+.ct tr.total-row td{font-weight:700;border-top:2px solid var(--border2);background:var(--surface2)}
+
+/* SORTIND */
+.si{font-size:9px;margin-left:2px;color:var(--accent)}
+
+@media(max-width:700px){
+  .topbar{height:auto;padding:8px 12px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Puelche HC — <span>Evaluaciones Psicolaborales</span></div>
+  <div class="tabs">
+    <button class="tab active" id="tab-evaluaciones" onclick="setTab('evaluaciones',this)">Evaluaciones</button>
+    <button class="tab" id="tab-resumen" onclick="setTab('resumen',this)">Resumen</button>
+  </div>
+  <button class="btn" onclick="openSettings()" title="Gestionar psicólogas">⚙ Psicólogas</button>
+  <button class="btn" onclick="syncAll()" title="Forzar guardado de todos los cambios">↑ Sincronizar</button>
+  <button class="btn btn-primary" onclick="openNew()">+ Nueva evaluación</button>
+</div>
+<div id="status-bar" style="display:none;padding:8px 20px;font-size:13px;font-weight:500;transition:all .3s"></div>
+
+<div class="filters" id="filter-bar">
+  <div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text3)">Psicóloga</span>
+  <select id="f-psico" onchange="render()"><option value="">Todas</option></select></div>
+  <div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text3)">Status</span>
+  <select id="f-status" onchange="render()">
+    <option value="">Todos</option>
+    <option value="Activo">Activo</option>
+    <option value="Cerrado">Cerrado</option>
+  </select></div>
+  <div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text3)">Tipo</span>
+  <select id="f-tipoeval" onchange="render()">
+    <option value="">Externa / Interna</option>
+    <option value="Externa">Externa</option>
+    <option value="Interna">Interna</option>
+  </select></div>
+  <div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text3)">Buscar</span>
+  <input type="text" id="f-search" placeholder="Buscar cliente, cargo o candidato..." oninput="render()" style="flex:1;min-width:160px;max-width:280px">
+  </div>
+  <span class="cnt" id="cnt"></span>
+</div>
+
+<div class="filters" id="resumen-filter-bar" style="display:none">
+  <div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text3)">Tipo</span>
+  <select id="r-tipoeval" onchange="render()">
+    <option value="">Externa / Interna</option>
+    <option value="Externa">Externa</option>
+    <option value="Interna">Interna</option>
+  </select></div>
+  <div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text3)">Informe</span>
+  <select id="r-informe" onchange="render()">
+    <option value="">Largo / Corto</option>
+    <option value="Largo">Largo</option>
+    <option value="Corto">Corto</option>
+  </select></div>
+</div>
+
+<div id="main-content" class="content"></div>
+
+<!-- NUEVA EVALUACIÓN -->
+<div class="overlay" id="ov-new">
+<div class="modal">
+  <div class="modal-hdr"><div class="modal-title">Nueva evaluación</div><button class="mc" onclick="closeNew()">×</button></div>
+  <div class="nf"><label>Cliente</label><input id="n-cliente" placeholder="Ej: NODO"></div>
+  <div class="nf"><label>Cargo</label><input id="n-cargo" placeholder="Ej: Gestor Territorial"></div>
+  <div class="nf"><label>Candidato</label><input id="n-cand" placeholder="Nombre del candidato"></div>
+  <div class="nf"><label>Psicóloga</label><select id="n-psico"><option value="">— Sin asignar —</option></select></div>
+  <div class="nf"><label>Informe (corto/largo)</label>
+    <select id="n-informe"><option value="Corto">Corto</option><option value="Largo">Largo</option></select>
+  </div>
+  <div class="nf"><label>Solicitud de referencias</label>
+    <select id="n-ref"><option value="SI" selected>Sí</option><option value="NO">No</option></select>
+  </div>
+  <div class="nf"><label>Fecha de solicitud</label><input type="date" id="n-fsol"></div>
+  <div class="nf"><label>Tipo de evaluación</label>
+    <select id="n-tipoeval" onchange="onTipoEvalChangeNew(this.value)">
+      <option value="Externa">Externa</option><option value="Interna">Interna</option>
+    </select>
+  </div>
+  <div class="nf" id="n-fact-wrap"><label>Facturado</label>
+    <select id="n-fact"><option value="NO" selected>No</option><option value="SI">Sí</option></select>
+  </div>
+  <div class="nf" id="n-fact-na-wrap" style="display:none"><label>Facturado</label>
+    <div class="hint">No Aplica (evaluación interna)</div>
+  </div>
+  <div class="fa">
+    <button class="btn" onclick="closeNew()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveNew()">Crear</button>
+  </div>
+</div>
+</div>
+
+<!-- SETTINGS -->
+<div class="overlay" id="ov-settings">
+<div class="modal" style="max-width:460px">
+  <div class="modal-hdr"><div class="modal-title">⚙ Gestionar psicólogas</div><button class="mc" onclick="document.getElementById('ov-settings').classList.remove('open')">×</button></div>
+  <div id="tag-psico" class="tag-list"></div>
+  <div class="tag-add">
+    <input id="new-psico-name" placeholder="Nombre completo (ej: Rosario Arratia)">
+    <button onclick="addPsico()">Agregar</button>
+  </div>
+  <div class="fa"><button class="btn btn-primary" onclick="document.getElementById('ov-settings').classList.remove('open');initSelects();render()">Listo</button></div>
+</div>
+</div>
+
+<script>
+// ─── PSICÓLOGAS (solo nombres; editable en sesión, agrega más desde ⚙) ──────
+let PSICOLOGAS = [
+  'Rosario Arratia',
+  'Claudia Klaasen',
+  'Claudia Gonzalez',
+  'Monserrat Kunz',
+  'Ignacia Pantoja',
+  'Paz Tapia',
+  'Estefanía Gonzalez',
+];
+function sortedPsicologas(){ return [...PSICOLOGAS].sort((a,b)=>a.localeCompare(b,'es')); }
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+let DATA = [];
+let nextId = 1;
+let curTab = 'evaluaciones';
+let curSortCol='fSol', curSortDir=-1;
+let activeCell=null;
+
+const REF_OPTS=['SI','NO'];
+const INFORME_OPTS=['Corto','Largo'];
+const TIPOEVAL_OPTS=['Externa','Interna'];
+const FACT_OPTS=['SI','NO'];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function fmtDate(d){
+  if(!d)return'';
+  try{const p=d.split('-');return`${p[2]}/${p[1]}/${p[0].slice(2)}`;}catch{return '';}
+}
+function calcStatus(r){ return r.fInf ? 'Cerrado' : 'Activo'; }
+function statusBadge(r){
+  const st = calcStatus(r);
+  return `<span class="badge ${st==='Cerrado'?'b-cerrado':'b-activo'}">${st}</span>`;
+}
+function tipoEvalBadge(v){
+  if(!v) return '<span class="hint">—</span>';
+  return `<span class="badge ${v==='Externa'?'b-externa':'b-interna'}">${v}</span>`;
+}
+
+// ─── SELECTS ─────────────────────────────────────────────────────────────────
+function fillSel(id,opts,withPlaceholder){
+  const el=document.getElementById(id); if(!el)return;
+  const keepFirst = withPlaceholder!==false;
+  while(el.options.length>(keepFirst?1:0))el.remove(keepFirst?1:0);
+  opts.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;el.appendChild(o);});
+}
+function initSelects(){
+  fillSel('n-psico', sortedPsicologas());
+  const fPsico=document.getElementById('f-psico');
+  fPsico.innerHTML='<option value="">Todas</option>'+sortedPsicologas().map(n=>`<option value="${n}">${n}</option>`).join('');
+}
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+function setTab(t, el){
+  curTab = t;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('filter-bar').style.display = t==='evaluaciones' ? 'flex' : 'none';
+  document.getElementById('resumen-filter-bar').style.display = t==='resumen' ? 'flex' : 'none';
+  render();
+}
+
+// ─── COMMIT CELL ─────────────────────────────────────────────────────────────
+function commitCell(rowId,field,value){
+  const r=DATA.find(x=>x.id===rowId); if(!r)return;
+  r[field]=value;
+  if(field==='fInf'){
+    r.status = calcStatus(r);
+  }
+  if(field==='tipoEval'){
+    r.fact = (value==='Interna') ? 'No Aplica' : (r.fact==='No Aplica' ? 'NO' : r.fact);
+  }
+  activeCell=null; render();
+  saveToSheets(r);
+}
+
+// ─── INLINE CELL ─────────────────────────────────────────────────────────────
+function makeCell(rowId,field,display,editType,opts=null){
+  const isActive=activeCell&&activeCell.rowId===rowId&&activeCell.field===field;
+  const r=DATA.find(x=>x.id===rowId);
+  if(isActive){
+    if(editType==='text'){
+      const val=(r[field]||'').toString().replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      return`<td><div class="cell"><input class="cell-input" value="${val}" id="ci-${rowId}-${field}" onkeydown="if(event.key==='Enter'){commitCell(${rowId},'${field}',this.value);}if(event.key==='Escape'){activeCell=null;render();}"></div></td>`;
+    }
+    if(editType==='date'){
+      const val=r[field]||'';
+      return`<td><div class="cell"><input type="date" class="cell-date" value="${val}" id="ci-${rowId}-${field}" onchange="commitCell(${rowId},'${field}',this.value||null)" onkeydown="if(event.key==='Escape'){activeCell=null;render();}"></div></td>`;
+    }
+    if(editType==='select'){
+      const val=r[field]||'';
+      const oh=opts.map(o=>`<option value="${o}"${o===val?' selected':''}>${o===''?'—':o}</option>`).join('');
+      return`<td><div class="cell"><select class="cell-select" id="ci-${rowId}-${field}" onchange="commitCell(${rowId},'${field}',this.value)" onkeydown="if(event.key==='Escape'){activeCell=null;render();}">${field==='psico'?'<option value="">— Sin asignar —</option>':''}${oh}</select></div></td>`;
+    }
+  }
+  return`<td class="editable" onclick="activeCell={rowId:${rowId},field:'${field}'};render()"><div class="cell">${display||'<span class="hint">—</span>'}</div></td>`;
+}
+
+// ─── FILTER / SORT ───────────────────────────────────────────────────────────
+function getFiltered(){
+  const fPsico=document.getElementById('f-psico').value;
+  const fStatus=document.getElementById('f-status').value;
+  const fTipo=document.getElementById('f-tipoeval').value;
+  const q=(document.getElementById('f-search').value||'').toLowerCase();
+  return DATA.filter(r=>{
+    if(fPsico && r.psico!==fPsico) return false;
+    if(fStatus && calcStatus(r)!==fStatus) return false;
+    if(fTipo && r.tipoEval!==fTipo) return false;
+    if(q && !((r.cliente||'').toLowerCase().includes(q) || (r.cargo||'').toLowerCase().includes(q) || (r.cand||'').toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+function sortBy(col){ if(curSortCol===col) curSortDir*=-1; else {curSortCol=col; curSortDir=1;} render(); }
+
+// ─── RENDER TABLE ────────────────────────────────────────────────────────────
+function renderTable(){
+  const filtered=getFiltered();
+  document.getElementById('cnt').textContent=filtered.length+' evaluaciones';
+  const sorted=[...filtered].sort((a,b)=>{
+    let va=a[curSortCol], vb=b[curSortCol];
+    if(!va && !vb) return 0;
+    if(!va) return 1;
+    if(!vb) return -1;
+    if(typeof va==='string'){ va=va.toLowerCase(); vb=(vb||'').toLowerCase(); }
+    return va<vb?-curSortDir:va>vb?curSortDir:0;
+  });
+  if(!sorted.length) return `<div style="text-align:center;padding:48px;color:var(--text3)">Sin evaluaciones con los filtros actuales</div>`;
+  const si=c=>c===curSortCol?`<span class="si">${curSortDir>0?'▲':'▼'}</span>`:'';
+  const rows=sorted.map(r=>{
+    const factCell = r.tipoEval==='Interna'
+      ? `<td><div class="cell"><span class="hint">No Aplica</span></div></td>`
+      : makeCell(r.id,'fact',r.fact?`<span style="font-size:12px">${r.fact==='SI'?'Sí':r.fact}</span>`:'','select',FACT_OPTS);
+    return `<tr>
+      <td style="cursor:pointer" onclick="activeCell={rowId:${r.id},field:'cargo'};render()"><div class="cell"><strong>${r.cargo||''}</strong></div></td>
+      ${makeCell(r.id,'cliente',r.cliente?`<span>${r.cliente}</span>`:'','text')}
+      ${makeCell(r.id,'cand',r.cand?`<span>${r.cand}</span>`:'','text')}
+      ${makeCell(r.id,'psico',r.psico?`<span style="font-size:12px;font-weight:600">${r.psico}</span>`:'','select',sortedPsicologas())}
+      ${makeCell(r.id,'tipoInforme',r.tipoInforme||'','select',INFORME_OPTS)}
+      ${makeCell(r.id,'ref',r.ref==='SI'?'Sí':(r.ref==='NO'?'No':''),'select',REF_OPTS)}
+      <td><div class="cell">${statusBadge(r)}</div></td>
+      ${makeCell(r.id,'fSol',fmtDate(r.fSol)?`<span style="font-size:11px">${fmtDate(r.fSol)}</span>`:'','date')}
+      ${makeCell(r.id,'fEnt',fmtDate(r.fEnt)?`<span style="font-size:11px">${fmtDate(r.fEnt)}</span>`:'','date')}
+      ${makeCell(r.id,'fInf',fmtDate(r.fInf)?`<span style="font-size:11px">${fmtDate(r.fInf)}</span>`:'','date')}
+      ${makeCell(r.id,'tipoEval',tipoEvalBadge(r.tipoEval),'select',TIPOEVAL_OPTS)}
+      ${factCell}
+      ${makeCell(r.id,'obs',r.obs?`<span style="font-size:12px;color:var(--text2);white-space:normal;line-height:1.4">${r.obs}</span>`:'','text')}
+      <td><button class="del-btn" onclick="if(confirm('¿Eliminar esta evaluación?')){deleteFromSheets(${r.id});DATA=DATA.filter(x=>x.id!==${r.id});render();}" title="Eliminar">🗑</button></td>
+    </tr>`;
+  }).join('');
+  return `<div class="table-wrap"><table>
+    <thead><tr>
+      <th class="sort" onclick="sortBy('cargo')" style="min-width:160px">Cargo ${si('cargo')}</th>
+      <th class="sort" onclick="sortBy('cliente')" style="min-width:120px">Cliente ${si('cliente')}</th>
+      <th class="sort" onclick="sortBy('cand')" style="min-width:140px">Candidato ${si('cand')}</th>
+      <th class="sort" onclick="sortBy('psico')" style="min-width:90px">Psicóloga ${si('psico')}</th>
+      <th style="min-width:70px">Informe</th>
+      <th style="min-width:70px">Referencias</th>
+      <th style="min-width:80px">Status</th>
+      <th class="sort" onclick="sortBy('fSol')" style="min-width:70px;font-size:10px">F. Solicitud ${si('fSol')}</th>
+      <th class="sort" onclick="sortBy('fEnt')" style="min-width:70px;font-size:10px">F. Entrevista ${si('fEnt')}</th>
+      <th class="sort" onclick="sortBy('fInf')" style="min-width:70px;font-size:10px">F. Entrega Informe ${si('fInf')}</th>
+      <th style="min-width:80px">Externa/Interna</th>
+      <th style="min-width:70px">Facturado</th>
+      <th style="min-width:220px">Observaciones</th>
+      <th></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// ─── RESUMEN: evaluaciones por psicóloga por mes ─────────────────────────────
+const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+function monthKeyOf(r){
+  const d = r.fSol || r.fEnt || r.fInf;
+  return d ? d.slice(0,7) : null; // YYYY-MM
+}
+function monthLabel(key){
+  const [y,m]=key.split('-');
+  return `${MESES[Number(m)-1]} ${y}`;
+}
+function renderResumen(){
+  if(!DATA.length) return `<div style="text-align:center;padding:48px;color:var(--text3)">Aún no hay evaluaciones cargadas</div>`;
+
+  const rTipoEval=document.getElementById('r-tipoeval').value;
+  const rInforme=document.getElementById('r-informe').value;
+  const data = DATA.filter(r=>{
+    if(rTipoEval && r.tipoEval!==rTipoEval) return false;
+    if(rInforme && r.tipoInforme!==rInforme) return false;
+    return true;
+  });
+
+  if(!data.length) return `<div style="text-align:center;padding:48px;color:var(--text3)">Sin evaluaciones con los filtros actuales</div>`;
+
+  const keysSet=new Set();
+  let sinFecha=0;
+  data.forEach(r=>{ const k=monthKeyOf(r); if(k) keysSet.add(k); else sinFecha++; });
+  const monthKeys=[...keysSet].sort();
+
+  if(!monthKeys.length) return `<div style="text-align:center;padding:48px;color:var(--text3)">Ninguna evaluación tiene fecha registrada todavía</div>`;
+
+  const rowNames=sortedPsicologas();
+  const counts={};
+  rowNames.forEach(n=>counts[n]={});
+  data.forEach(r=>{
+    const name=r.psico||'Sin asignar';
+    const k=monthKeyOf(r);
+    if(!k) return;
+    if(!counts[name]) { counts[name]={}; rowNames.push(name); }
+    counts[name][k]=(counts[name][k]||0)+1;
+  });
+
+  const totalsByMonth={}; monthKeys.forEach(k=>totalsByMonth[k]=0);
+  let grandTotal=0;
+  const bodyRows=rowNames.map(n=>{
+    let rowTotal=0;
+    const cells=monthKeys.map(k=>{
+      const c=(counts[n]&&counts[n][k])||0;
+      rowTotal+=c; totalsByMonth[k]+=c;
+      return `<td>${c||'<span class="hint">—</span>'}</td>`;
+    }).join('');
+    grandTotal+=rowTotal;
+    return `<tr><td class="name">${n}</td>${cells}<td class="total">${rowTotal}</td></tr>`;
+  }).join('');
+  const totalRow=`<tr class="total-row"><td class="name">Total</td>${monthKeys.map(k=>`<td>${totalsByMonth[k]}</td>`).join('')}<td class="total">${grandTotal}</td></tr>`;
+  const nota = sinFecha ? `<div class="hint" style="margin-top:8px">${sinFecha} evaluación(es) sin ninguna fecha registrada no se incluyen en este resumen.</div>` : '';
+
+  return `<div class="ct-wrap"><table class="ct">
+    <thead><tr><th class="left">Psicóloga</th>${monthKeys.map(k=>`<th>${monthLabel(k)}</th>`).join('')}<th>Total</th></tr></thead>
+    <tbody>${bodyRows}${totalRow}</tbody>
+  </table></div>${nota}`;
+}
+
+function render(){
+  const c=document.getElementById('main-content');
+  const tw=c.querySelector('.table-wrap');
+  const scrollTop=tw?tw.scrollTop:0;
+  c.innerHTML = curTab==='resumen' ? renderResumen() : renderTable();
+  const tw2=c.querySelector('.table-wrap');
+  if(tw2 && scrollTop) tw2.scrollTop=scrollTop;
+  if(activeCell){
+    const el=document.getElementById(`ci-${activeCell.rowId}-${activeCell.field}`);
+    if(el){el.focus();if(el.select)el.select();}
+  }
+}
+
+// ─── SETTINGS: PSICÓLOGAS ────────────────────────────────────────────────────
+function openSettings(){ renderPsicoTags(); document.getElementById('ov-settings').classList.add('open'); }
+function renderPsicoTags(){
+  document.getElementById('tag-psico').innerHTML=sortedPsicologas().map(n=>{
+    const i=PSICOLOGAS.indexOf(n);
+    return `<div class="tag-item">${n}<button class="tag-del" onclick="PSICOLOGAS.splice(${i},1);renderPsicoTags()">×</button></div>`;
+  }).join('');
+}
+function addPsico(){
+  const n=document.getElementById('new-psico-name').value.trim();
+  if(!n){alert('Ingresa el nombre.');return;}
+  if(PSICOLOGAS.includes(n)){alert('Esa psicóloga ya está en la lista.');return;}
+  PSICOLOGAS.push(n);
+  document.getElementById('new-psico-name').value='';
+  renderPsicoTags();
+}
+
+// ─── NUEVA EVALUACIÓN ────────────────────────────────────────────────────────
+function onTipoEvalChangeNew(v){
+  const isInterna = v==='Interna';
+  document.getElementById('n-fact-wrap').style.display = isInterna ? 'none' : 'flex';
+  document.getElementById('n-fact-na-wrap').style.display = isInterna ? 'flex' : 'none';
+  if(!isInterna) document.getElementById('n-fact').value='NO';
+}
+function openNew(){
+  document.getElementById('n-tipoeval').value='Externa';
+  onTipoEvalChangeNew('Externa');
+  document.getElementById('ov-new').classList.add('open');
+}
+function closeNew(){ document.getElementById('ov-new').classList.remove('open'); }
+function saveNew(){
+  const cliente=document.getElementById('n-cliente').value.trim();
+  const cargo=document.getElementById('n-cargo').value.trim();
+  if(!cliente||!cargo){alert('Cliente y cargo son obligatorios.');return;}
+  const tipoEval=document.getElementById('n-tipoeval').value;
+  const rec={
+    id:nextId++,
+    cliente, cargo,
+    cand:document.getElementById('n-cand').value.trim(),
+    psico:document.getElementById('n-psico').value,
+    tipoInforme:document.getElementById('n-informe').value,
+    ref:document.getElementById('n-ref').value,
+    fSol:document.getElementById('n-fsol').value||null,
+    fEnt:null,
+    fInf:null,
+    status:'Activo',
+    tipoEval,
+    fact: tipoEval==='Interna' ? 'No Aplica' : (document.getElementById('n-fact').value || 'NO'),
+    obs:'',
+  };
+  DATA.push(rec);
+  closeNew();
+  saveToSheets(rec);
+  ['n-cliente','n-cargo','n-cand','n-fsol'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('n-psico').value='';
+  document.getElementById('n-informe').value='Corto';
+  document.getElementById('n-ref').value='SI';
+  document.getElementById('n-tipoeval').value='Externa';
+  onTipoEvalChangeNew('Externa');
+  render();
+}
+
+// Close overlays on bg click
+['ov-new','ov-settings'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))document.getElementById(id).classList.remove('open');});
+});
+
+// ─── CLOSE CELL ON OUTSIDE CLICK ─────────────────────────────────────────────
+document.addEventListener('mousedown', function(e){
+  if(!activeCell) return;
+  const activeEl = document.getElementById(`ci-${activeCell.rowId}-${activeCell.field}`);
+  if(e.target.tagName === 'SELECT' || e.target.closest('select')) return;
+  if(activeEl && activeEl.tagName === 'SELECT') return;
+  if(activeEl && activeEl.contains(e.target)) return;
+  if(activeEl) {
+    const val = activeEl.value !== undefined ? activeEl.value : activeEl.options?.[activeEl.selectedIndex]?.value;
+    if(val !== undefined) commitCell(activeCell.rowId, activeCell.field, val);
+    else { activeCell=null; render(); }
+  } else {
+    activeCell=null; render();
+  }
+}, true);
+
+// ─── PERSISTENCIA — Google Sheets Backend ────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7hN_zdPyFD2J3dgBNVhYo2WDqUBstMt5Jlg_1p2kCWuMa2Q61pETukWAiFJjahQg_0g/exec';
+
+function showStatus(msg, type='info') {
+  let bar = document.getElementById('status-bar');
+  if (!bar) return;
+  bar.textContent = msg;
+  bar.style.background = type==='error' ? '#FAE5E5' : type==='ok' ? '#E5F4EE' : '#FDF0D8';
+  bar.style.color = type==='error' ? '#8F1A1A' : type==='ok' ? '#0F6E56' : '#7A4F0A';
+  bar.style.display = 'block';
+  if (type !== 'loading') setTimeout(() => bar.style.display='none', 3000);
+}
+
+function toSheetRecord(r){
+  return {
+    id: r.id,
+    Cliente: r.cliente,
+    Cargo: r.cargo,
+    Candidato: r.cand,
+    Psicologa: r.psico,
+    TipoInforme: r.tipoInforme,
+    Referencias: r.ref,
+    FechaSolicitud: r.fSol || '',
+    FechaEntrevista: r.fEnt || '',
+    FechaEntregaInforme: r.fInf || '',
+    Status: r.status,
+    TipoEvaluacion: r.tipoEval,
+    Facturado: r.fact,
+    Observaciones: r.obs,
+  };
+}
+
+async function loadFromSheets() {
+  showStatus('Cargando datos desde Google Sheets...', 'loading');
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=getAll');
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+
+    DATA = json.records.map(r => ({
+      id: Number(r.id),
+      cliente: r.Cliente || '',
+      cargo: r.Cargo || '',
+      cand: r.Candidato || '',
+      psico: r.Psicologa || '',
+      tipoInforme: r.TipoInforme || '',
+      ref: r.Referencias || '',
+      fSol: r.FechaSolicitud || null,
+      fEnt: r.FechaEntrevista || null,
+      fInf: r.FechaEntregaInforme || null,
+      status: r.Status || 'Activo',
+      tipoEval: r.TipoEvaluacion || 'Externa',
+      fact: r.Facturado || '',
+      obs: r.Observaciones || '',
+    }));
+
+    nextId = Math.max(...DATA.map(r => r.id), 0) + 1;
+    initSelects();
+    render();
+    showStatus('Datos cargados ✓', 'ok');
+  } catch(err) {
+    showStatus('Error cargando datos: ' + err.message, 'error');
+    console.error(err);
+    initSelects();
+    render();
+  }
+}
+
+async function saveToSheets(record) {
+  showStatus('Guardando...', 'loading');
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'save', record: toSheetRecord(record) }),
+    });
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    showStatus('Guardado ✓', 'ok');
+  } catch(err) {
+    showStatus('Error al guardar: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+async function syncAll() {
+  if(!confirm('¿Sincronizar todos los datos con Google Sheets? Esto puede tardar unos segundos.')) return;
+  showStatus('Sincronizando todos los registros...', 'loading');
+  let ok = 0, errors = 0;
+  for(const r of DATA) {
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'save', record: toSheetRecord(r) }),
+      });
+      const json = await res.json();
+      if(json.error) throw new Error(json.error);
+      ok++;
+    } catch(err) {
+      errors++;
+      console.error('Error syncing id=' + r.id, err);
+    }
+  }
+  if(errors === 0) showStatus(`Sincronización completa ✓ — ${ok} registros guardados`, 'ok');
+  else showStatus(`Sincronización parcial — ${ok} OK, ${errors} errores`, 'error');
+}
+
+async function deleteFromSheets(id) {
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'delete', id }),
+    });
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+  } catch(err) {
+    showStatus('Error al eliminar: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+initSelects();
+loadFromSheets();
+</script>
+</body>
+</html>
