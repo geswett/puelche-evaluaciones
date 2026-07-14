@@ -402,7 +402,7 @@ function renderTable(){
 // ─── RESUMEN: evaluaciones por psicóloga por mes ─────────────────────────────
 const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 function monthKeyOf(r){
-  const d = r.fSol || r.fEnt || r.fInf;
+  const d = r.fEnt || r.fSol || r.fInf;
   return d ? d.slice(0,7) : null; // YYYY-MM
 }
 function monthLabel(key){
@@ -440,9 +440,15 @@ function renderResumen(){
     counts[name][k]=(counts[name][k]||0)+1;
   });
 
+  const rowTotals={};
+  rowNames.forEach(n=>{ rowTotals[n]=monthKeys.reduce((s,k)=>s+((counts[n]&&counts[n][k])||0),0); });
+  const visibleNames=rowNames.filter(n=>rowTotals[n]>0);
+
+  if(!visibleNames.length) return `<div style="text-align:center;padding:48px;color:var(--text3)">Ninguna psicóloga tiene evaluaciones con los filtros actuales</div>`;
+
   const totalsByMonth={}; monthKeys.forEach(k=>totalsByMonth[k]=0);
   let grandTotal=0;
-  const bodyRows=rowNames.map(n=>{
+  const bodyRows=visibleNames.map(n=>{
     let rowTotal=0;
     const cells=monthKeys.map(k=>{
       const c=(counts[n]&&counts[n][k])||0;
